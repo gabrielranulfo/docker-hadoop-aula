@@ -14,48 +14,104 @@ services:
       - CLUSTER_NAME=test
     env_file:
       - ./hadoop.env
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
 
-  datanode:
+  odin:
     image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
-    container_name: datanode
+    container_name: odin
     restart: always
     volumes:
-      - hadoop_datanode:/hadoop/dfs/data
+      - odin:/hadoop/dfs/data
     environment:
       SERVICE_PRECONDITION: "namenode:9870"
     env_file:
       - ./hadoop.env
-  
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+
+  thor:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: thor
+    restart: always
+    volumes:
+      - thor:/hadoop/dfs/data
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870"
+    env_file:
+      - ./hadoop.env
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+
+  loki:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: loki
+    restart: always
+    volumes:
+      - loki:/hadoop/dfs/data
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870"
+    env_file:
+      - ./hadoop.env
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+
   resourcemanager:
     image: bde2020/hadoop-resourcemanager:2.0.0-hadoop3.2.1-java8
     container_name: resourcemanager
     restart: always
     environment:
-      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864"
+      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 odin:9864 thor:9864 loki:9864"
     env_file:
       - ./hadoop.env
+    ports:
+      - 8088:8088
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
 
-  nodemanager1:
+  nodemanager:
     image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8
     container_name: nodemanager
     restart: always
     environment:
-      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864 resourcemanager:8088"
+      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 odin:9864 thor:9864 loki:9864 resourcemanager:8088"
     env_file:
       - ./hadoop.env
-  
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+
   historyserver:
     image: bde2020/hadoop-historyserver:2.0.0-hadoop3.2.1-java8
     container_name: historyserver
     restart: always
     environment:
-      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864 resourcemanager:8088"
+      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 odin:9864 thor:9864 loki:9864 resourcemanager:8088"
     volumes:
       - hadoop_historyserver:/hadoop/yarn/timeline
     env_file:
       - ./hadoop.env
-  
+    ports:
+      - 8188:8188
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+
 volumes:
   hadoop_namenode:
-  hadoop_datanode:
+  odin:
+  thor:
+  loki:
   hadoop_historyserver:
